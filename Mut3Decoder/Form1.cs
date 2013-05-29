@@ -15,6 +15,7 @@ namespace Mut3Decoder
         Mut3 mut;
         Progress progress;
         string coding;
+        int[] favorites = null;
 
         public Form1(Mut3 mut)
         {
@@ -365,6 +366,20 @@ namespace Mut3Decoder
                 this.carKind.Text = config.Substring(4);
                 this.carYear.Text = "20" + coding.Substring(65, 2);
                 this.codingHex.Text = coding.Substring(200, 140);
+                string etacs = coding.Substring(162, 8);
+                if (System.IO.File.Exists("fav\\" + etacs))
+                {
+                    string[] fav = System.IO.File.ReadAllLines("fav\\" + etacs);
+                    this.favorites = new int[fav.Length];
+                    for (int i = 0; i < fav.Length; ++i)
+                    {
+                        this.favorites[i] = System.Convert.ToInt32(fav[i]);
+                    }
+                }
+                else
+                {
+                    this.favorites = null;
+                }
             }
         }
 
