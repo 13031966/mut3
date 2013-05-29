@@ -14,6 +14,7 @@ namespace Mut3Decoder
     {
         Mut3 mut;
         Progress progress;
+        string coding;
 
         public Form1(Mut3 mut)
         {
@@ -347,6 +348,86 @@ namespace Mut3Decoder
                 MessageBox.Show(ex.Message, null, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 carType.Focus();
             }
+        }
+
+        private void btnLoad_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.InitialDirectory = "D:\\Doc\\!out\\Cdgdata";
+            dlg.Filter = "KON files (*.kon)|*.kon|All files (*.*)|*.*";
+            dlg.FilterIndex = 1;
+            dlg.RestoreDirectory = false;
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                coding = System.IO.File.ReadAllText(dlg.FileName);
+                string config = coding.Substring(49, 12);
+                this.carType.Text = config.Substring(0, 4);
+                this.carKind.Text = config.Substring(4);
+                this.carYear.Text = "20" + coding.Substring(65, 2);
+                this.codingHex.Text = coding.Substring(200, 140);
+            }
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            if (this.codingHexNewRich.Text.Length == 0)
+            {
+                MessageBox.Show("Specify coding");
+                return;
+            }
+            SaveFileDialog dlg = new SaveFileDialog();
+            dlg.InitialDirectory = "D:\\Doc\\!out\\Cdgdata";
+            dlg.Filter = "KON files (*.kon)|*.kon|All files (*.*)|*.*";
+            dlg.FilterIndex = 1;
+            dlg.RestoreDirectory = false;
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                string newCodingStr = coding.Replace(this.codingHex.Text, this.codingHexNewRich.Text);
+                char[] newCoding = newCodingStr.ToCharArray();
+                string crcStr = crc(this.codingHexNewRich.Text);
+                for (int i = 0; i < 4; ++i) newCoding[1224 + i] = crcStr[i];
+                System.IO.File.WriteAllText(dlg.FileName, new string(newCoding));
+            }
+        }
+
+        static private string crc(string inputStr)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(inputStr);
+            for (int i = 0; i <= 0x200; i++)
+            {
+                if (sb.Length < i)
+                    sb.Append(" ");
+            }
+            inputStr = sb.ToString();
+            byte[] str = Encoding.ASCII.GetBytes(inputStr);
+            int result = 65535;
+            int length = str.Length;
+            int CurrentByte = 0;
+            int StepByte = 0;
+
+            for (int i = 0; i < length; i++)
+            {
+                CurrentByte = (int)str[i];
+                result ^= CurrentByte;
+                StepByte = result;
+                for (int j = 0; j < 8; j++)
+                {
+                    if ((StepByte & 1) == 1)
+                    {
+                        result = (StepByte >> 1) & 0xFFFF;
+                        result ^= 0x8408;
+                        StepByte = result;
+                    }
+                    else
+                    {
+                        StepByte = (StepByte >> 1) & 0xFFFF;
+                        result = StepByte;
+                    }
+                }
+            }
+            ushort res = ((ushort)~(short)result);
+            return res.ToString("X");
         }
     }
 }
