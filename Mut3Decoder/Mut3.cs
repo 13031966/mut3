@@ -18,11 +18,15 @@ namespace Mut3Decoder
 
         public Mut3()
         {
-            sqlConnection = new SqlConnection(@"Integrated Security=true; server=(local)\caesarcompdb; database=CAESARCOMPDB2");
+            
+            //sqlConnection = new SqlConnection(@"Integrated Security=true; server=(10.30.31.13)\caesarcompdb; database=CAESARCOMPDB2");
+            sqlConnection = new SqlConnection(@"user id=sa2;password=1q2w3e;Integrated Security=false; server=10.30.23.250\CAESARCOMPDB; database=CAESARCOMPDB2");
+
             Microsoft.SqlServer.Management.Common.ServerConnection serverConnection =
             new Microsoft.SqlServer.Management.Common.ServerConnection(sqlConnection);
             serverConnection.Connect();
             server = new Server(serverConnection);
+             
         }
 
         public List<String> loadDiagVers(String year, String type, String kind, bool etacs)

@@ -50,9 +50,12 @@
             this.diagVer = new System.Windows.Forms.ComboBox();
             this.btnLoad = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
+            this.statusStrip = new System.Windows.Forms.StatusStrip();
+            this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)(this.grid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.itemValues)).BeginInit();
             this.groupBox1.SuspendLayout();
+            this.statusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // carType
@@ -83,9 +86,10 @@
             this.grid.ReadOnly = true;
             this.grid.RowHeadersWidth = 30;
             this.grid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.grid.Size = new System.Drawing.Size(619, 477);
+            this.grid.Size = new System.Drawing.Size(619, 471);
             this.grid.TabIndex = 13;
             this.grid.SelectionChanged += new System.EventHandler(this.grid_SelectionChanged);
+            this.grid.KeyDown += new System.Windows.Forms.KeyEventHandler(this.grid_KeyDown);
             // 
             // codingHex
             // 
@@ -125,7 +129,7 @@
             this.itemValues.ReadOnly = true;
             this.itemValues.RowHeadersWidth = 30;
             this.itemValues.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.itemValues.Size = new System.Drawing.Size(266, 477);
+            this.itemValues.Size = new System.Drawing.Size(266, 471);
             this.itemValues.TabIndex = 6;
             this.itemValues.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.itemValues_CellDoubleClick);
             // 
@@ -275,12 +279,28 @@
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
+            // statusStrip
+            // 
+            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.statusLabel});
+            this.statusStrip.Location = new System.Drawing.Point(0, 581);
+            this.statusStrip.Name = "statusStrip";
+            this.statusStrip.Size = new System.Drawing.Size(1022, 22);
+            this.statusStrip.TabIndex = 20;
+            this.statusStrip.Text = "statusStrip1";
+            // 
+            // statusLabel
+            // 
+            this.statusLabel.Name = "statusLabel";
+            this.statusLabel.Size = new System.Drawing.Size(0, 17);
+            // 
             // Form1
             // 
             this.AcceptButton = this.btnDecode;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1022, 596);
+            this.ClientSize = new System.Drawing.Size(1022, 603);
+            this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnLoad);
             this.Controls.Add(this.diagVer);
@@ -308,6 +328,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.itemValues)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.statusStrip.ResumeLayout(false);
+            this.statusStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -335,6 +357,8 @@
         private System.Windows.Forms.ComboBox diagVer;
         private System.Windows.Forms.Button btnLoad;
         private System.Windows.Forms.Button btnSave;
+        private System.Windows.Forms.StatusStrip statusStrip;
+        private System.Windows.Forms.ToolStripStatusLabel statusLabel;
     }
 }
 

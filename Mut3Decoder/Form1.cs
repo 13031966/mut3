@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+using System.Data.SqlClient;
 using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using System.Data.SqlClient;
 
 namespace Mut3Decoder
 {
@@ -15,6 +12,7 @@ namespace Mut3Decoder
         Mut3 mut;
         Progress progress;
         string coding;
+        string filter;
         int[] favorites = null;
 
         public Form1(Mut3 mut)
@@ -29,7 +27,7 @@ namespace Mut3Decoder
             this.codingHex.Text = "001A3380AE0504001C001A66240000A8B7A9B38D180000000845014802083716009B0E1C6D086B792C5035030C28193591041C24953100800016000000000000000000000000";
 */
             grid.Columns.Add("Name", "Name");
-            grid.Columns[0].Width = 340;
+            grid.Columns[0].Width = 315;
             grid.Columns.Add("Value", "Value");
             grid.Columns[1].Width = 100;
             grid.Columns.Add("NewValue", "New Value");
@@ -39,12 +37,15 @@ namespace Mut3Decoder
             int c = grid.Columns.Add("id", null);
             grid.Columns[c].Width = 30;
             grid.Columns[c].Visible = false;
+            
 
             itemValues.Columns.Add("Value", "Value");
             itemValues.Columns[0].Width = 200;
             itemValues.Columns.Add("hex", null);
             itemValues.Columns[1].Width = 30;
 
+            grid.RowHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            grid.RowHeadersWidth = 54;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -69,9 +70,21 @@ namespace Mut3Decoder
             while (reader.Read())
             {
                 int r = grid.Rows.Add();
+                grid.Rows[r].HeaderCell.Value = System.Convert.ToString(r + 1);
                 grid.Rows[r].Cells[0].Value = reader["NAME"].ToString() + " /// " + reader["NAME_E"].ToString();
                 grid.Rows[r].Cells["id"].Value = reader["QUAL_ID"];
             }
+            if (this.favorites != null)
+            {
+                for (int i = 0; i < this.favorites.Length; ++i)
+                {
+                    if (this.favorites[i] <= grid.Rows.Count)
+                    {
+                        grid.Rows[this.favorites[i] - 1].Cells[0].Style.BackColor = Color.Aquamarine;
+                    }
+                }
+            }
+
             reader.Close();
         }
 
@@ -133,6 +146,7 @@ namespace Mut3Decoder
 
         private bool validateParams()
         {
+            statusLabel.Text = filter = "";
             carType.Text = carType.Text.Trim();
             carYear.Text = carYear.Text.Trim();
             carKind.Text = carKind.Text.Trim();
@@ -332,17 +346,23 @@ namespace Mut3Decoder
                 cells[2].Style.BackColor = SystemColors.Window;
         }
 
-        private void diagVer_Enter(object sender, EventArgs e)
+        private void loadDiagVers()
         {
             if (!validateParams())
                 return;
+            List<String> diags = mut.loadDiagVers(carYear.Text, carType.Text, carKind.Text, radioEtacs.Checked);
+            diagVer.Items.Clear();
+            diagVer.Items.AddRange(diags.ToArray());
+            if (diagVer.Items.Count > 0)
+                diagVer.SelectedIndex = 0;
+
+        }
+
+        private void diagVer_Enter(object sender, EventArgs e)
+        {
             try
             {
-                List<String> diags = mut.loadDiagVers(carYear.Text, carType.Text, carKind.Text, radioEtacs.Checked);
-                diagVer.Items.Clear();
-                diagVer.Items.AddRange(diags.ToArray());
-                if (diagVer.Items.Count > 0)
-                    diagVer.SelectedIndex = 0;
+                loadDiagVers();
             }
             catch (Exception ex)
             {
@@ -367,13 +387,23 @@ namespace Mut3Decoder
                 this.carYear.Text = "20" + coding.Substring(65, 2);
                 this.codingHex.Text = coding.Substring(200, 140);
                 string etacs = coding.Substring(162, 8);
+                if (etacs.Contains("8637A"))
+                {
+                    this.radioEtacs.Checked = true;
+                }
+                else if (etacs.Contains("1860B"))
+                {
+                    this.radioMotor.Checked = true;
+                }
                 if (System.IO.File.Exists("fav\\" + etacs))
                 {
                     string[] fav = System.IO.File.ReadAllLines("fav\\" + etacs);
-                    this.favorites = new int[fav.Length];
-                    for (int i = 0; i < fav.Length; ++i)
+                    loadDiagVers();
+                    this.diagVer.Text = fav[0];
+                    this.favorites = new int[fav.Length - 1];
+                    for (int i = 1; i < fav.Length; ++i)
                     {
-                        this.favorites[i] = System.Convert.ToInt32(fav[i]);
+                        this.favorites[i - 1] = System.Convert.ToInt32(fav[i]);
                     }
                 }
                 else
@@ -443,6 +473,38 @@ namespace Mut3Decoder
             }
             ushort res = ((ushort)~(short)result);
             return res.ToString("X");
+        }
+
+        private void grid_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                statusLabel.Text = this.filter = "";
+            }
+            else if (e.KeyCode == Keys.Back)
+            {
+                if (this.filter.Length > 0) this.filter = this.filter.Remove(this.filter.Length - 1);
+            }
+            else if ((e.KeyCode >= Keys.A && e.KeyCode <= Keys.Z) || e.KeyCode == Keys.Space)
+            {
+                char c = (char)e.KeyValue;
+                this.filter += c;
+            }
+            doFilter();
+        }
+
+        private void doFilter()
+        {
+            if (this.filter.Length > 0) statusLabel.Text = "Filter: " + this.filter.ToLower();
+            for (int i = 0; i < grid.Rows.Count; ++i)
+            {
+                if (this.filter.Length == 0 || grid.Rows[i].Cells[0].Value.ToString().ToUpper().Contains(this.filter))
+                {
+                    grid.Rows[i].Visible = true;
+                    continue;
+                }
+                grid.Rows[i].Visible = false;
+            }
         }
     }
 }
