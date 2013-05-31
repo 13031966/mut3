@@ -408,6 +408,7 @@ namespace Mut3Decoder
                 }
                 else
                 {
+                    this.statusLabel.Text = "Can't load favorites at '" + System.IO.Directory.GetCurrentDirectory() + "\\fav\\" + etacs + "'";
                     this.favorites = null;
                 }
             }
